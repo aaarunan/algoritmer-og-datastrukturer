@@ -1,2 +1,4 @@
-./__pycache__/
-./sebastian-sort/
+.__pycache__
+.sebastian-sort
+.idea
+**/*.class
