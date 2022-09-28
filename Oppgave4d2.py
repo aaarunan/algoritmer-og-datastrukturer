@@ -11,7 +11,7 @@ class Node:
         if self.value is None:
             self.value = string
         else:
-            if self.value < string:
+            if string < self.value:
                 if self.left:
                     self.left.add_node(string)
                 else:
@@ -24,27 +24,33 @@ class Node:
 
     def traverse_tree(self):
         current_level = [self]
-        center_rate = 60
+        center_rate = 64
         while current_level:
             next_level = []
+            if all(node is None for node in current_level):
+                break
             for node in current_level:
-                print(node.value.center(center_rate), end=" ")
-                if node.left:
+                if node is None:
+                    value = "*"
+                    next_level.append(None)
+                    next_level.append(None)
+                else:
+                    value = node.value
                     next_level.append(node.left)
-                if node.right:
                     next_level.append(node.right)
-            print("\n")
-            center_rate = center_rate >> 1
+                print(value.center(center_rate), end="")
+            center_rate >>= 1
             current_level = next_level
+            print("\n")
             
 
 
 def main():
-    strings = ["hei", "du", "er", "stygg", "veldig", "moren", "din", "jf" " lasdkjf", "lsdkj" "dsljf", "lkfd", "øl"]
+    
     root = Node(None)
-    for string in strings:
-        root.add_node(string)
-    root.traverse_tree()
+    while True:
+        root.add_node(input("Type a word: "))
+        print(root.traverse_tree())
 
 
 if __name__ == "__main__":

@@ -1,9 +1,10 @@
 import java.nio.charset.CharacterCodingException;
 import java.util.LinkedList;
+import java.util.Random;
 import java.util.Scanner;
 
 class Node<T> {
-    public T value;
+    private T value;
     private Node right;
     private Node left;
 
@@ -16,6 +17,10 @@ class Node<T> {
 
     public T getValue() {
         return value;
+    }
+
+    public void setValue(T value) {
+        this.value = value;
     }
 
     public Node<T> getLeft() {
@@ -72,23 +77,29 @@ class Node<T> {
         this.left = left;
     }
 
-    public void print() {
+    @Override
+    public String toString() {
         Node last = this.getFirst();
+        StringBuilder result = new StringBuilder();
         while (last != null) {
-            System.out.print(last.getValue());
+            result.append(last.getValue());
             last = last.getRight();
-        }
-        System.out.println();
-    }
 
+        }
+        return result.toString();
+    }
 }
 
 public class Oppgave4 {
 
     public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-        while (true) {
+        System.out.println(testAddition(100000));
+        System.out.println(testSubtraction(100000));
 
+        Scanner sc = new Scanner(System.in);
+        boolean loop = true;
+
+        while (loop) {
             System.out.println("Type nums1:");
             Node<Character> nums1 = parseInput(sc.nextLine());
             System.out.println("Type nums2:");
@@ -97,13 +108,19 @@ public class Oppgave4 {
             System.out.println("Choose operation:");
             System.out.println("1. Addtion");
             System.out.println("2. Subtraction");
+            System.out.println("3. Exit");
 
             switch (sc.nextInt()) {
                 case 1:
-                    addition(nums1, nums2).print();
+                    System.out.println(removeTrailingZeroes(addition(nums1, nums2)));
                     break;
                 case 2:
-                    subtract(nums1, nums2).print();
+                    System.out.println(removeTrailingZeroes(subtract(nums1, nums2)));
+                    break;
+                case 3:
+                    loop = false;
+                    sc.close();
+                    System.exit(0);
                     break;
             }
             sc.nextLine();
@@ -126,7 +143,7 @@ public class Oppgave4 {
                 num1 = Character.getNumericValue(last1.getValue());
                 last1 = last1.getLeft();
             } else {
-                num2 = 0;
+                num1 = 0;
             }
             if (last2 != null) {
                 num2 = Character.getNumericValue(last2.getValue());
@@ -153,14 +170,13 @@ public class Oppgave4 {
         int num2 = 0;
         Node<Character> last1 = nums1.getLast();
         Node<Character> last2 = nums2.getLast();
-        boolean loaner = false;
 
         while (last1 != null || last2 != null) {
             if (last1 != null) {
                 num1 = Character.getNumericValue(last1.getValue());
                 last1 = last1.getLeft();
             } else {
-                num2 = 0;
+                num1 = 0;
             }
             if (last2 != null) {
                 num2 = Character.getNumericValue(last2.getValue());
@@ -168,21 +184,35 @@ public class Oppgave4 {
             } else {
                 num2 = 0;
             }
-            if (loaner) {
-                num1 -= 1;
-                loaner = false;
-            }
             diff = num1 - num2;
             if (diff < 0) {
-                if (nums1.getLeft() == null) {
-                    throw new IllegalArgumentException("Result is negative");
+                if (nums1 == null) {
+                    throw new IllegalStateException("Result is negative");
                 }
-                loaner = true;
+                last1.setValue((char) (Character.getNumericValue(last1.getValue()) - 1 + '0'));
                 diff += 10;
             }
             result.insertFirst((char) (diff + '0'));
         }
         return result;
+    }
+
+    private static Node<Character> removeTrailingZeroes(Node<Character> node) {
+        Node<Character> first = node.getFirst();
+        while (first != null) {
+            int value = Character.getNumericValue(first.getValue());
+            if (value > 0) {
+                break;
+            }
+            if (first.getRight() == null) {
+                break;
+            }
+            first = first.getRight();
+            if (value == 0) {
+                first.setLeft(null);
+            }
+        }
+        return first;
     }
 
     private static Node<Character> parseInput(String string) {
@@ -194,5 +224,38 @@ public class Oppgave4 {
             nums.insertLast(num);
         }
         return nums;
+    }
+
+    private static boolean testAddition(int n) {
+        Random rand = new Random();
+        for (int i = 0; i < n; i++) {
+            int num1 = Math.abs(rand.nextInt())/10;
+            int num2 = Math.abs(rand.nextInt())/10;
+            int sum = num1 + num2;
+            int sum2 = Integer.parseInt(addition(parseInput(Integer.toString(num1)), parseInput(Integer.toString(num2))).toString());
+            if (sum != sum2) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean testSubtraction(int n) {
+        Random rand = new Random();
+        for (int i = 0; i < n; i++) {
+            int num1 = Math.abs(rand.nextInt())/10;
+            int num2 = Math.abs(rand.nextInt())/10;
+            if (num1-num2 < 0) {
+                int temp = num1;
+                num1 = num2;
+                num2 = temp;
+            }
+            int sum = num1 - num2;
+            int sum2 = Integer.parseInt(subtract(parseInput(Integer.toString(num1)), parseInput(Integer.toString(num2))).toString());
+            if (sum != sum2) {
+                return false;
+            }
+        }
+        return true;
     }
 }
