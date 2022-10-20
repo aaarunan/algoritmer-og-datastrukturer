@@ -1,5 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
+from dis import dis
 from math import dist
 
 @dataclass
@@ -29,11 +30,13 @@ class Graph:
             self.graph[start].append_edge(end, weight)
             return
         self.graph[start] = Node(start, [Edge(start, end,weight)])
+    
+        
 
     def dijikstras(self, start: int):
-        distances = [float("inf")] * self.nodes
-        distances[start] = 0
-        predecessors = [None] * self.nodes
+        distances = [[None,float("inf")]] * self.nodes
+        distances[start] = ["start", 0]
+
         queue = PriorityQueue()
         queue.insert(self.graph[start], 0)
         visited = set()
@@ -42,22 +45,38 @@ class Graph:
                 continue
             if node.value != start:
                 queue.insert(node, float("inf"))
-        
+
         while not queue.is_empty(): 
             current_node, distance = queue.peek()
             if current_node.value in visited:
                continue
             visited.add(current_node.value)
+            distances[current_node.value][1] = distance
             for edge in current_node.edges:
-                if edge.end not in visited:
-                    new_weight = distance + edge.weight
-                    queue.insert(, new_weight)
-            distances[current_node.value] = distance
-            predecessors[current_node.value] = current_node
-        
+                if edge.end in visited:
+                    continue
+                new_weight = distance + edge.weight
+                if new_weight < distances[edge.end][1]:
+                    queue.insert(self.graph[edge.end], new_weight)
+                    distances[edge.end] = [edge.start, new_weight]
         print(distances)
-            
-                   
+        self.print_predecessors(distances, start)
+        
+    def print_predecessors(self, distances, start):
+        print("distance, path")
+        for obj in distances:
+            print(obj[0], "     ", end="")
+            if (obj[1] == float("inf")):
+                print("inf")
+                continue
+            if obj[1] is None:
+                print("start")
+            predecessor = obj[0]
+            while predecessor != "start":
+                print(predecessor, end="-->")
+                predecessor = distances[predecessor][0]
+
+            print("start")
 
     def __repr__(self) -> str:
         return str(self.graph)
@@ -75,15 +94,6 @@ class PriorityQueue:
            return True 
 
         return False
-    
-    def update_node(self, node, weight):
-        self.distances[self.nodes[node].value] = weight
-        self.heapify(0, len(self.nodes))
-    
-    def get_distance(self, node):
-        print(self.nodes)
-        print(node)
-        return self.distances[self.nodes[node].value]
 
     def heapify(self, end):
         if end != 0:
@@ -109,6 +119,8 @@ class PriorityQueue:
             self.swap(left, i)
 
     def insert(self, node, weight):
+        if node is None:
+            return
         self.nodes.append(node)
         self.distances.append(weight)
         self.heapify(len(self.nodes))
@@ -123,14 +135,17 @@ class PriorityQueue:
         self.heapify(len(self.nodes))
         return [peek, distance]
 
+    def __repr__(self) -> str:
+        return str(self.nodes)
+
 
 def main():
     graph = parse_from_file()
-    print(graph.dijikstras(1))
+    graph.dijikstras(1)
     return
 
 def parse_from_file():
-    with open("vg1.txt", "r", encoding="UTF-8") as file:
+    with open("vg3.txt", "r", encoding="UTF-8") as file:
         lines = file.read().splitlines()
     args = lines[0].split()
     graph = Graph(int(args[0]), int(args[1]))
