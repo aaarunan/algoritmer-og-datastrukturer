@@ -2,6 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from dis import dis
 from math import dist
+import tqdm
 
 @dataclass
 class Edge:
@@ -26,6 +27,8 @@ class Graph:
     
 
     def add(self, start: int, end: int, weight: int) -> None:
+        if start is None:
+            raise None
         if self.graph[start] is not None:
             self.graph[start].append_edge(end, weight)
             return
@@ -37,19 +40,18 @@ class Graph:
         distances = [[None,float("inf")]] * self.nodes
         distances[start] = ["start", 0]
 
-        queue = PriorityQueue()
-        queue.insert(self.graph[start], 0)
-        visited = set()
-        for node in self.graph:
-            if node == None:
-                continue
-            if node.value != start:
-                queue.insert(node, float("inf"))
+        temp = [float("inf")] * self.nodes
+        temp[start] = 0
 
+        queue = PriorityQueue(self.graph[:], temp)
+        visited = set()
+        pbar = tqdm.tqdm(total=self.nodes)
+        pbar.display()
         while not queue.is_empty(): 
             current_node, distance = queue.peek()
             if current_node.value in visited:
                continue
+            pbar.update(1)
             visited.add(current_node.value)
             distances[current_node.value][1] = distance
             for edge in current_node.edges:
@@ -60,7 +62,8 @@ class Graph:
                     queue.insert(self.graph[edge.end], new_weight)
                     distances[edge.end] = [edge.start, new_weight]
         print(distances)
-        self.print_predecessors(distances, start)
+        pbar.close()
+        #self.print_predecessors(distances, start)
         
     def print_predecessors(self, distances, start):
         print("distance, path")
@@ -82,8 +85,12 @@ class Graph:
         return str(self.graph)
 
 class PriorityQueue:
-    distances = []
-    nodes = []
+
+    def __init__(self, nodes, distances) -> None:
+        self.distances = distances
+        self.nodes = nodes
+        print(len(distances))
+        self.heapify(len(nodes))
 
     def swap(self, i, j):
         self.distances[i], self.distances[j] = self.distances[j], self.distances[i]
@@ -145,7 +152,7 @@ def main():
     return
 
 def parse_from_file():
-    with open("vg3.txt", "r", encoding="UTF-8") as file:
+    with open("vg4.txt", "r", encoding="UTF-8") as file:
         lines = file.read().splitlines()
     args = lines[0].split()
     graph = Graph(int(args[0]), int(args[1]))
