@@ -48,7 +48,8 @@ class Graph:
         pbar = tqdm.tqdm(total=self.nodes)
         pbar.display()
         while not queue.is_empty(): 
-            current_node, distance = queue.peek()
+
+            current_node, distance, index = queue.peek()
             if current_node.value in visited:
                continue
             pbar.update(1)
@@ -59,7 +60,10 @@ class Graph:
                     continue
                 new_weight = distance + edge.weight
                 if new_weight < distances[edge.end][1]:
-                    queue.insert(self.graph[edge.end], new_weight)
+                    if edge.end not in queue.indexes:
+                        queue.insert(self.graph[edge.end], new_weight)
+                    else:
+                        queue.changeAtIndex(index, new_weight)
                     distances[edge.end] = [edge.start, new_weight]
         print(distances)
         pbar.close()
@@ -85,7 +89,6 @@ class Graph:
         return str(self.graph)
 
 class PriorityQueue:
-
     def __init__(self, nodes, distances) -> None:
         self.distances = distances
         self.nodes = nodes
@@ -95,6 +98,8 @@ class PriorityQueue:
     def swap(self, i, j):
         self.distances[i], self.distances[j] = self.distances[j], self.distances[i]
         self.nodes[i], self.nodes[j] = self.nodes[j], self.nodes[i]
+        self.indexes[self.nodes[i].value] = j
+        self.indexes[self.nodes[j].value] = i
 
     def is_empty(self):
         if len(self.nodes) == 0:
@@ -129,9 +134,13 @@ class PriorityQueue:
         if node is None:
             return
         self.nodes.append(node)
+        self.indexes[node.value] = len(self.nodes)-1
         self.distances.append(weight)
+
         self.heapify(len(self.nodes))
     
+    def changeAtIndex(self, index, weight):
+        self.distances[index] =  weight
         
     def peek(self):
         if len(self.nodes) == 0:
@@ -139,8 +148,10 @@ class PriorityQueue:
 
         peek = self.nodes.pop(0)
         distance = self.distances.pop(0)
+        index = self.indexes.pop(peek.value)
+
         self.heapify(len(self.nodes))
-        return [peek, distance]
+        return [peek, distance, index-1]
 
     def __repr__(self) -> str:
         return str(self.nodes)
