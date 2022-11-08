@@ -3,3 +3,4 @@
 .sebastian-sort
 .idea
 **/*.class
+**/venv
